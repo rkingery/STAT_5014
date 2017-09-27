@@ -1,0 +1,77 @@
+---
+title: "STAT 5014 - Homework 3"
+author: "Ryan Kingery"
+date: "9/20/2017"
+header-includes:
+   - \usepackage{amsmath}
+   - \usepackage{amsfonts}
+   - \usepackage{amssymb}
+   - \usepackage{tikz}
+   - \usepackage{amsthm}
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+\section{Problem 3}
+According to the Peng's book, EDA allows one to identify interesting relationships between variables, to check to see if there is or isn't evidence to support or question a hypothesis, or to check for problems with the data set. EDA allows one to decide which questions about the data set are worth pursuing further given time and budgetary constraints on a project.
+
+\section{Problem 4}
+For this problem I couldn't get the xlsx package to load correctly due to some issue with the rJava package not loading correctly. Therefore, instead of loading the sheets in as xlsx files, I loaded them in separately as csv files and then joined them together. I also went ahead and loaded the separate blocks into indivdual dataframes for later analysis. We can see that the dataframe contains three variables: block, depth, and phoshate.
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+raw_1 <- read.csv("~/Desktop/HW4_data_1.csv")
+raw_2 <- read.csv("~/Desktop/HW4_data_2.csv")
+df <- bind_rows(raw_1,raw_2)
+b1 = subset(df,df$block == 1)
+b2 = subset(df,df$block == 2)
+b3 = subset(df,df$block == 3)
+b4 = subset(df,df$block == 4)
+head(df)
+```
+
+Summary statistics on each column are given below.
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+summary(df)
+```
+
+One may perhaps be interested in whether one's choice of block effects the other two variables. Below are boxplots of the other two factors. For depth it doesn't appear that block choice has a significant effect. For phosphate, however, it appears that there is at least some effect present in block 3.
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+par(mfrow=c(1,2))
+boxplot(b1$depth,b2$depth,b3$depth,b4$depth,main="depth")
+boxplot(b1$phosphate,b2$phosphate,b3$phosphate,b4$phosphate,main="phosphate")
+```
+
+One may also be interested in how depth and phosphate relate across the different blocks. Plots of these relations are given below. One can see that choice of block significantly affects the relationship between depth and phosphate in quite unusual ways.
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+par(mfrow=c(2,2))
+plot(b1$depth,b1$phosphate,main="block 1")
+plot(b2$depth,b2$phosphate,main="block 2")
+plot(b3$depth,b3$phosphate,main="block 3")
+plot(b4$depth,b4$phosphate,main="block 4")
+```
+
+We conclude this section with a scatterplot matrix. From the matrix we can see that the variables present do not appear to show any significant correlation across all the blocks, and for practical purposes may hence be regarded as independent (though evidently not conditionally independent given a fixed block).
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+pairs(~block+depth+phosphate,data=df,main="Scatterplot Matrix")
+```
+
+\section{Problem 5}
+To me the most illuminating figure was the one that showed how the relationship between depth and phosphate varied quite substantially across the different blocks. I assume this is due to physical reasons, but I don't really know. It is weird though compared to the other plots, which seemed to be more straight forward.
+
+Just for weirdness, here is a plot of depth vs. phosphate across all blocks, with each block color-coded.
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+plot(df$depth,df$phosphate,col=df$block,main="Depth vs. Phosphate")
+```
+
+
