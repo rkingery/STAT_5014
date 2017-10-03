@@ -1,0 +1,103 @@
+---
+title: "Homework 5"
+author: "Ryan Kingery"
+date: "10/4/2017"
+header-includes:
+   - \usepackage{amsmath}
+   - \usepackage{amsfonts}
+   - \usepackage{amssymb}
+   - \usepackage{tikz}
+   - \usepackage{amsthm}
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+\section{Problem 3}
+A good figure is one that the expected reader should be able to understand with minimal description. It doesn't have to be pretty enough to win any awards unless you're neurotic, but it should show the desired relationships in the data in the clearest possible way.
+
+\section{Problem 4}
+The following is a first attempt at computing proportions by column:
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+proportion <- function(vect) {
+    # Computes proportion of 1's (successes) in a binary vector
+    # Inputs: binary vector
+    # Returns: numeric between 0 and 1
+    return(sum(vect)/length(vect))
+}
+set.seed(12345)
+P4b_data <- matrix(rbinom(10, 1, prob = (30:40)/100), nrow = 10, ncol = 10)
+apply(P4b_data,2,proportion)
+```
+Evidently we get the same proportion across every column. To alleviate this, we can apply the rbinom() function separately by defining a new function outcomes() and using apply() on that to produce a matrix with different columns.
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+outcomes <- function(p) {
+    # Generates a vector representing the outcome of 10 probability p coin tosses
+    # Inputs: numeric probability between 0 and 1
+    # Returns: length 10 binary vector
+    return(rbinom(10,1,prob=p))
+}
+
+p <- as.matrix(30:40/100)
+P4b_data_new <- as.matrix(apply(p,1,outcomes),nrow=10,ncol=10)
+apply(P4b_data_new,2,proportion)
+```
+
+Note there also seems to be an issue with the new matrix having an extra observation, though I'm not quite sure where that is coming from.
+
+\section{Problem 5}
+Since this was a .dat file, the easiest way to import it with minimal munging was as a table. Thankfully, the data already appears to be tidy, and there appear to be no missing values.
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+input <- read.table("http://www2.isye.gatech.edu/~jeffwu/book/data/starch.dat", header=TRUE, skip=0)
+input <- as_tibble(input)
+str(input)
+```
+
+Since there are only 3 starches and they appear to be categorical, a useful thing to do perhaps is to segment the dataset by starch. A reasonable question then to ask is whether strength and thickness depend on the type of starch used. We can, of course, examine this using a plot.
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+CA <- subset(input,input$starch == "CA")
+CO <- subset(input,input$starch == "CO")
+PO <- subset(input,input$starch == "PO")
+
+plot(CA$thickness,CA$strength,col="red",xlab="thickness",ylab="strength",main="Strength vs Thickness Across Starches")
+points(CO$thickness,CO$strength,col="blue")
+points(PO$thickness,PO$strength,col="green")
+legend(6.1,1000,legend=c("CA","CO","PO"),col=c("red", "blue","green"),lty=1,cex=0.8)
+```
+
+From the plot we can see that both thickness as well as strength depend on starch, and that in general there is a positive relationship between thickness and strength across all starches. From here, one could parhaps attempt to fit each of these with a curve, but I think the data over each subset are too few to justify making such a model assumption. Thus, from an initial exploratory standpoint I think this is sufficient for now.
+
+\section{Problem 6}
+The following code imports the database of US cities and states. Note that Washington DC and Puerto Rico have been removed from the cities list.
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+library(downloader)
+library(stringr)
+download("http://www.farinspace.com/wp-content/uploads/us_cities_and_states.zip",dest="us_cities_states.zip")
+unzip("us_cities_states.zip", exdir="./")
+library(data.table)
+states <- fread(input = "./us_cities_and_states/states.sql",skip = 23,sep = "'", sep2 = ",", header = F, select = c(2,4))
+cities <- fread(input = "./us_cities_and_states/cities_extended.sql",skip = 23,sep = "'", sep2 = ",", header = F, select = c(2,4))
+cities <- subset(cities,V4 != "PR" & V4 != "DC")
+```
+
+A summary table of the number of cities by state is given below.
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+table(cities$V4)
+```
+
+The following function uses the stringr package to count the number of occurances of a character in a string:
+```{r, echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(comment=FALSE)}
+string_count <- function(letter,state) {
+    # Counts number of occurances of a letter in a string
+    # Inputs: letter to count, string to count from
+    # Returns: number of occurances of letter
+    return(str_count(state,letter))
+}
+```
+Not exactly sure what's going on with the rest of this problem, but I'm out of time anyway.
